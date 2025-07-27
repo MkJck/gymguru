@@ -1,15 +1,14 @@
-# Секреты и настройки
+# Secrets and settings
 .env
 *.env
 .env.local
 secrets.py
 settings/local.py
 
-# Базы данных
 *.sqlite3
 *.db
 
-# Питон
+# Python
 __pycache__/
 *.pyc
 *.pyo
@@ -28,21 +27,16 @@ env/
 *.sln
 *.sw?
 
-# Статика
 staticfiles/
 media/
 
-# Логи
+
 *.log
 
-# Миграции (спорно!)
 /migrations/
 !*/migrations/__init__.py
 
-# Пакеты
+# Packages
 *.egg-info/
 dist/
 build/
-
-# Jupyter
-.ipynb_checkpoints/
