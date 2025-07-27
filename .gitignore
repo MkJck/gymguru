@@ -1,0 +1,48 @@
+# Секреты и настройки
+.env
+*.env
+.env.local
+secrets.py
+settings/local.py
+
+# Базы данных
+*.sqlite3
+*.db
+
+# Питон
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+env/
+.venv/
+.python-version
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Статика
+staticfiles/
+media/
+
+# Логи
+*.log
+
+# Миграции (спорно!)
+/migrations/
+!*/migrations/__init__.py
+
+# Пакеты
+*.egg-info/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/

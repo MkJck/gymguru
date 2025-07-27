@@ -1,0 +1,4 @@
+[
+  {"model": "timelines.timelinetype", "pk": 1, "fields": {"name": "Selfie"}},
+  {"model": "timelines.timelinetype", "pk": 2, "fields": {"name": "Full body"}}
+]
