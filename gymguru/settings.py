@@ -78,11 +78,16 @@ WSGI_APPLICATION = 'gymguru.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql', 
+# SECRET_KEY = os.getenv('SECRET_KEY', 'fallback_key')
+
+        'NAME': 'testguru',
+        'USER': 'mkjck',
+        'PASSWORD': os.getenv('PSQL_MKJCK_PASSWORD', 'fallback_key'),
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
