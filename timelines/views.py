@@ -19,10 +19,9 @@ from timelines.models import TimelineType, KeyPhoto
 import boto3
 from botocore.exceptions import ClientError
 
-import os
-print('AWS_ACCESS_KEY_ID:', os.environ.get('AWS_ACCESS_KEY_ID'))
-print('AWS_SECRET_ACCESS_KEY:', os.environ.get('AWS_SECRET_ACCESS_KEY'))
-print('HOME:', os.environ.get('HOME'))
+# print('AWS_ACCESS_KEY_ID:', os.environ.get('AWS_ACCESS_KEY_ID'))
+# print('AWS_SECRET_ACCESS_KEY:', os.environ.get('AWS_SECRET_ACCESS_KEY'))
+# print('HOME:', os.environ.get('HOME'))
 
 class TimelineTypeView(generics.ListAPIView):
 
@@ -107,125 +106,6 @@ class PhotoUploadView(APIView):
             )
 
 
-def test_upload_page(request):
-    """
-    Simple page for testing photo upload
-    """
-    with open('test_upload.html', 'r', encoding='utf-8') as f:
-        content = f.read()
-    return HttpResponse(content)
-
-
-class PhotoListView(APIView):
-    permission_classes = [permissions.AllowAny]
-    
-    def get(self, request):
-        """
-        Returns a list of all uploaded photos
-        """
-        try:
-            media_dir = settings.MEDIA_ROOT
-            
-                # Check if the media folder exists
-            if not os.path.exists(media_dir):
-                return Response(
-                    {'message': 'Media folder not found', 'photos': []}, 
-                    status=status.HTTP_200_OK
-                )
-            
-            # Get a list of all files in the media folder
-            photos = []
-            for filename in os.listdir(media_dir):
-                file_path = os.path.join(media_dir, filename)
-                
-                # Check if it's a file (not a folder)
-                if os.path.isfile(file_path):
-                    # Get information about the file
-                    file_stat = os.stat(file_path)
-                    
-                    # Check if it's an image by extension
-                    image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'}
-                    file_extension = os.path.splitext(filename)[1].lower()
-                    
-                    if file_extension in image_extensions:
-                        photos.append({
-                            'filename': filename,
-                            'url': f"{settings.MEDIA_URL}{filename}",
-                            'size': file_stat.st_size,
-                            'created_at': file_stat.st_ctime,
-                            'modified_at': file_stat.st_mtime
-                        })
-            
-            # Sort by creation date (newest first)
-            photos.sort(key=lambda x: x['created_at'], reverse=True)
-            
-            return Response({
-                'message': f'Found {len(photos)} photos',
-                'photos': photos,
-                'total_count': len(photos)
-            }, status=status.HTTP_200_OK)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Error getting list of photos: {str(e)}'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
-class PhotoDetailView(APIView):
-    permission_classes = [permissions.AllowAny]
-    
-    def get(self, request, filename):
-        """
-        Returns information about a specific photo by filename
-        """
-        try:
-            media_dir = settings.MEDIA_ROOT
-            file_path = os.path.join(media_dir, filename)
-            
-            # Check if the file exists
-            if not os.path.exists(file_path):
-                return Response(
-                    {'error': 'Photo not found'}, 
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            
-            # Check if it's a file (not a folder)
-            if not os.path.isfile(file_path):
-                return Response(
-                    {'error': 'The specified path is not a file'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Get information about the file
-            file_stat = os.stat(file_path)
-            
-            # Check if it's an image by extension
-            image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'}
-            file_extension = os.path.splitext(filename)[1].lower()
-            
-            if file_extension not in image_extensions:
-                return Response(
-                    {'error': 'File is not an image'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            return Response({
-                'filename': filename,
-                'url': f"{settings.MEDIA_URL}{filename}",
-                'size': file_stat.st_size,
-                'created_at': file_stat.st_ctime,
-                'modified_at': file_stat.st_mtime,
-                'content_type': f'image/{file_extension[1:]}' if file_extension != '.jpg' else 'image/jpeg'
-            }, status=status.HTTP_200_OK)
-            
-        except Exception as e:
-            return Response(
-                {'error': f'Error getting information about the photo: {str(e)}'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-
 class KeyPhotoUploadView(APIView):
     """View for uploading photo to S3 and creating a KeyPhoto record"""
     permission_classes = [permissions.AllowAny]
@@ -290,7 +170,7 @@ class KeyPhotoUploadView(APIView):
             s3_path = f"keyphotos/{unique_filename}"
             
             # 6. Upload the file to S3
-            s3_client = boto3.client('s3', region_name='ru-central1')
+            s3_client = boto3.client('s3', region_name=settings.AWS_REGION)
             
             try:
                 s3_client.upload_fileobj(
@@ -348,14 +228,6 @@ class KeyPhotoUploadView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-
-def test_keyphoto_upload_page(request):
-    """
-    Page for testing KeyPhoto upload to S3
-    """
-    with open('test_keyphoto_upload.html', 'r', encoding='utf-8') as f:
-        content = f.read()
-    return HttpResponse(content)
 
 class KeyPhotoDetailView(APIView):
     def get(self, request, pk):

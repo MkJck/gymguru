@@ -5,6 +5,7 @@
 secrets.py
 settings/local.py
 .aws/
+secrets.yml
 
 *.sqlite3
 *.db
