@@ -1,6 +1,6 @@
 from django.urls import include, path
 from . import views
-from .views import TimelineTypeView, NewTimelineView, PhotoUploadView, PhotoListView, PhotoDetailView, test_upload_page, test_keyphoto_upload_page, KeyPhotoUploadView
+from .views import TimelineTypeView, NewTimelineView, PhotoUploadView, PhotoListView, PhotoDetailView, test_upload_page, test_keyphoto_upload_page, KeyPhotoUploadView, KeyPhotoDetailView, KeyPhotoDownloadView
 
 # URLconf
 urlpatterns = [
@@ -12,4 +12,6 @@ urlpatterns = [
     path('test-upload/', test_upload_page, name='test-upload'),
     path('test-keyphoto-upload/', test_keyphoto_upload_page, name='test-keyphoto-upload'),
     path('keyphoto/new/', KeyPhotoUploadView.as_view(), name='keyphoto-upload'),
+    path('keyphoto/<int:pk>/', KeyPhotoDetailView.as_view(), name='keyphoto-detail'),
+    path('keyphoto/<int:pk>/download/', KeyPhotoDownloadView.as_view(), name='keyphoto-download'),
 ]

@@ -19,29 +19,27 @@ class NewTimelineSerializer(serializers.ModelSerializer):
 
 
 class KeyPhotoSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели KeyPhoto"""
+    """Serializer for KeyPhoto model"""
     
-    # Поля для создания (из POST запроса)
+    # Fields for creation (from POST request)
     photo_taken_at = serializers.DateTimeField()
-    weight_centigrams = serializers.IntegerField(required=False)  # Опциональное поле
+    weight_centigrams = serializers.IntegerField(required=False)  # Optional field
     
     class Meta:
         model = KeyPhoto
         fields = [
-            'id', 'filename', 's3_path', 's3_url', 
-            'uploaded_at', 'photo_taken_at', 'weight_centigrams',
-            'file_size', 'content_type', 'created', 'updated'
+            'id', 'filename', 's3_path', 'presigned_url', 'uploaded_at', 'photo_taken_at',
+            'weight_centigrams', 'file_size', 'created', 'updated', 'is_deleted'
         ]
         read_only_fields = [
-            'id', 'filename', 's3_path', 's3_url', 
-            'uploaded_at', 'file_size', 'content_type', 'created', 'updated'
+            'id', 'uploaded_at', 'created', 'updated'
         ]
     
     def create(self, validated_data):
-        """Создает новый объект KeyPhoto"""
-        # Если вес не передан, генерируем случайный
+        """Create a new KeyPhoto object"""
+        # If weight is not provided, generate a random one
         if 'weight_centigrams' not in validated_data:
             validated_data['weight_centigrams'] = KeyPhoto.generate_random_weight()
         
-        # Остальные поля будут заполнены в view
+        # Other fields will be filled in the view
         return KeyPhoto.objects.create(**validated_data)
