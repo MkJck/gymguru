@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import TimelineType, Timeline
+from .models import TimelineType, Timeline, KeyPhoto
+
+
+admin.site.register(KeyPhoto)
 
 @admin.register(TimelineType)
 class TimelineTypeAdmin(admin.ModelAdmin):

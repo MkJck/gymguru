@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест загрузки KeyPhoto в S3</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="file"], input[type="datetime-local"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>Тест загрузки KeyPhoto в S3</h1>
+    
+    <form id="uploadForm">
+        <div class="form-group">
+            <label for="photo">Выберите фотографию:</label>
+            <input type="file" id="photo" name="photo" accept="image/*" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="photo_taken_at">Дата создания фотографии:</label>
+            <input type="datetime-local" id="photo_taken_at" name="photo_taken_at" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="weight_centigrams">Вес в сантиграммах (опционально):</label>
+            <input type="number" id="weight_centigrams" name="weight_centigrams" 
+                   placeholder="750 (75 кг)" min="700" max="850">
+            <small>Если не указать, будет сгенерирован случайный вес (70-85 кг)</small>
+        </div>
+        
+        <button type="submit">Загрузить в S3</button>
+    </form>
+    
+    <div id="result"></div>
+
+    <script>
+        // Устанавливаем текущую дату и время по умолчанию
+        document.getElementById('photo_taken_at').value = new Date().toISOString().slice(0, 16);
+        
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const photoFile = document.getElementById('photo').files[0];
+            const photoTakenAt = document.getElementById('photo_taken_at').value;
+            const weightCentigrams = document.getElementById('weight_centigrams').value;
+            
+            if (!photoFile) {
+                showResult('Пожалуйста, выберите файл', 'error');
+                return;
+            }
+            
+            formData.append('photo', photoFile);
+            formData.append('photo_taken_at', photoTakenAt);
+            
+            if (weightCentigrams) {
+                formData.append('weight_centigrams', weightCentigrams);
+            }
+            
+            try {
+                const response = await fetch('/api/keyphoto/new/', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult(`
+                        <h3>✅ Успешно загружено!</h3>
+                        <p><strong>Файл:</strong> ${result.filename}</p>
+                        <p><strong>S3 URL:</strong> <a href="${result.s3_url}" target="_blank">${result.s3_url}</a></p>
+                        <p><strong>Вес:</strong> ${result.key_photo.weight_centigrams/10}g (${result.key_photo.weight_centigrams/1000} кг)</p>
+                        <p><strong>Дата создания:</strong> ${result.key_photo.photo_taken_at}</p>
+                        <p><strong>Размер файла:</strong> ${(result.key_photo.file_size / 1024).toFixed(2)} KB</p>
+                    `, 'success');
+                } else {
+                    showResult(`
+                        <h3>❌ Ошибка загрузки</h3>
+                        <p><strong>Статус:</strong> ${response.status}</p>
+                        <p><strong>Ошибка:</strong> ${result.error || 'Неизвестная ошибка'}</p>
+                        ${result.details ? `<p><strong>Детали:</strong> ${JSON.stringify(result.details)}</p>` : ''}
+                    `, 'error');
+                }
+            } catch (error) {
+                showResult(`
+                    <h3>❌ Ошибка сети</h3>
+                    <p>${error.message}</p>
+                `, 'error');
+            }
+        });
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = message;
+            resultDiv.className = `result ${type}`;
+        }
+    </script>
+</body>
+</html> 

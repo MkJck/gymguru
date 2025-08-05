@@ -4,6 +4,7 @@
 .env.local
 secrets.py
 settings/local.py
+.aws/
 
 *.sqlite3
 *.db
