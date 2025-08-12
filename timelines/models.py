@@ -6,7 +6,7 @@ import random
 User = get_user_model()
 
 class Timeline(models.Model):
-    # user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='timelines')
     name = models.CharField(max_length=100)
     # settings = models.JSONField()
 
@@ -15,7 +15,10 @@ class Timeline(models.Model):
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.name
+        return f"{self.user.username} - {self.name}"
+
+    class Meta:
+        unique_together = ['user', 'name']
 
 
 class TimelineType(models.Model):
@@ -28,7 +31,8 @@ class TimelineType(models.Model):
 class KeyPhoto(models.Model):
     """Model for storing key photos with weight data"""
     
-    filename = models.CharField(max_length=255, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='key_photos', null=True, blank=True)
+    filename = models.CharField(max_length=255)
     s3_path = models.CharField(max_length=500)
     presigned_url = models.URLField(max_length=500)  # Temporary file link
     uploaded_at = models.DateTimeField(auto_now_add=True)
@@ -40,7 +44,7 @@ class KeyPhoto(models.Model):
     updated = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return f"KeyPhoto {self.filename} - {self.weight_centigrams/10}g - {self.photo_taken_at.date()}"
+        return f"{self.user.username} - KeyPhoto {self.filename} - {self.weight_centigrams/10}g - {self.photo_taken_at.date()}"
     
     @property
     def weight_grams(self):
@@ -53,5 +57,8 @@ class KeyPhoto(models.Model):
     @classmethod
     def generate_random_weight(cls):
         return random.randint(700, 850)
+
+    class Meta:
+        unique_together = ['user', 'filename']
 
 

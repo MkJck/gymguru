@@ -14,7 +14,7 @@ from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
 
 from timelines.serializers import TimelineTypeSerializer, NewTimelineSerializer, KeyPhotoSerializer
-from timelines.models import TimelineType, KeyPhoto
+from timelines.models import TimelineType, KeyPhoto, Timeline
 
 import boto3
 from botocore.exceptions import ClientError
@@ -27,12 +27,12 @@ class TimelineTypeView(generics.ListAPIView):
 
     queryset = TimelineType.objects.all()
     serializer_class = TimelineTypeSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get']
 
 
 class NewTimelineView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     # @csrf_exempt
     # def dispatch(self, *args, **kwargs):
@@ -50,7 +50,7 @@ class NewTimelineView(APIView):
 
 
 class PhotoUploadView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
     
     def post(self, request):
@@ -108,7 +108,7 @@ class PhotoUploadView(APIView):
 
 class KeyPhotoUploadView(APIView):
     """View for uploading photo to S3 and creating a KeyPhoto record"""
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
     
     def post(self, request):
@@ -165,9 +165,11 @@ class KeyPhotoUploadView(APIView):
             file_extension = os.path.splitext(photo.name)[1]
             unique_filename = f"{uuid.uuid4()}{file_extension}"
             
-            # 5. S3 settings
+            # 5. S3 settings with user-specific folder structure
             bucket_name = 'testguru-v2'
-            s3_path = f"keyphotos/{unique_filename}"
+            user_id = request.user.id
+            username = request.user.username
+            s3_path = f"users/{username}/keyphotos/{unique_filename}"
             
             # 6. Upload the file to S3
             s3_client = boto3.client('s3', region_name=settings.AWS_REGION)
@@ -200,7 +202,7 @@ class KeyPhotoUploadView(APIView):
                 if weight_centigrams:
                     key_photo_data['weight_centigrams'] = int(weight_centigrams)
                 
-                serializer = KeyPhotoSerializer(data=key_photo_data)
+                serializer = KeyPhotoSerializer(data=key_photo_data, context={'request': request})
                 if serializer.is_valid():
                     key_photo = serializer.save()
                     
@@ -230,12 +232,13 @@ class KeyPhotoUploadView(APIView):
 
 
 class KeyPhotoDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
     def get(self, request, pk):
         """
-        Get all fields of KeyPhoto by id
+        Get all fields of KeyPhoto by id (only if owned by current user)
         """
         try:
-            obj = KeyPhoto.objects.get(pk=pk)
+            obj = KeyPhoto.objects.get(pk=pk, user=request.user)
             from .serializers import KeyPhotoSerializer
             serializer = KeyPhotoSerializer(obj)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -244,10 +247,10 @@ class KeyPhotoDetailView(APIView):
 
     def put(self, request, pk):
         """
-        Soft delete: is_deleted=True
+        Soft delete: is_deleted=True (only if owned by current user)
         """
         try:
-            obj = KeyPhoto.objects.get(pk=pk)
+            obj = KeyPhoto.objects.get(pk=pk, user=request.user)
             obj.is_deleted = True
             obj.save()
             return Response({'message': f'KeyPhoto with id={pk} marked as deleted'}, status=status.HTTP_200_OK)
@@ -256,19 +259,20 @@ class KeyPhotoDetailView(APIView):
 
     def delete(self, request, pk):
         """
-        Hard delete: deletes the record from the database
+        Hard delete: deletes the record from the database (only if owned by current user)
         """
         try:
-            obj = KeyPhoto.objects.get(pk=pk)
+            obj = KeyPhoto.objects.get(pk=pk, user=request.user)
             obj.delete()
             return Response({'message': f'KeyPhoto with id={pk} deleted from database'}, status=status.HTTP_200_OK)
         except KeyPhoto.DoesNotExist:
             return Response({'error': f'KeyPhoto with id={pk} not found'}, status=status.HTTP_404_NOT_FOUND)
 
 class KeyPhotoDownloadView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
     def get(self, request, pk):
         try:
-            obj = KeyPhoto.objects.get(pk=pk)
+            obj = KeyPhoto.objects.get(pk=pk, user=request.user)
             if obj.is_deleted:
                 return Response({'error': 'Photo deleted'}, status=410)
             s3 = boto3.client('s3', region_name='ru-central1')
@@ -281,5 +285,33 @@ class KeyPhotoDownloadView(APIView):
             return FileResponse(fileobj, content_type=content_type, filename=obj.filename)
         except KeyPhoto.DoesNotExist:
             raise Http404()
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+
+class UserKeyPhotosView(APIView):
+    """View for getting all KeyPhotos for the current user"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        """Get all KeyPhotos for the current user"""
+        try:
+            key_photos = KeyPhoto.objects.filter(user=request.user, is_deleted=False).order_by('-created')
+            serializer = KeyPhotoSerializer(key_photos, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+
+class UserTimelinesView(APIView):
+    """View for getting all Timelines for the current user"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        """Get all Timelines for the current user"""
+        try:
+            timelines = Timeline.objects.filter(user=request.user, is_deleted=False).order_by('-created')
+            serializer = NewTimelineSerializer(timelines, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=500)

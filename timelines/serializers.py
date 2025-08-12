@@ -14,6 +14,8 @@ class NewTimelineSerializer(serializers.ModelSerializer):
         fields = ['name']
 
     def create(self, validated_data):
+        # Automatically add the current user
+        validated_data['user'] = self.context['request'].user
         timeline = Timeline.objects.create(**validated_data)
         return timeline
 
@@ -28,15 +30,18 @@ class KeyPhotoSerializer(serializers.ModelSerializer):
     class Meta:
         model = KeyPhoto
         fields = [
-            'id', 'filename', 's3_path', 'presigned_url', 'uploaded_at', 'photo_taken_at',
+            'id', 'user', 'filename', 's3_path', 'presigned_url', 'uploaded_at', 'photo_taken_at',
             'weight_centigrams', 'file_size', 'created', 'updated', 'is_deleted'
         ]
         read_only_fields = [
-            'id', 'uploaded_at', 'created', 'updated'
+            'id', 'user', 'uploaded_at', 'created', 'updated'
         ]
     
     def create(self, validated_data):
         """Create a new KeyPhoto object"""
+        # Automatically add the current user
+        validated_data['user'] = self.context['request'].user
+        
         # If weight is not provided, generate a random one
         if 'weight_centigrams' not in validated_data:
             validated_data['weight_centigrams'] = KeyPhoto.generate_random_weight()

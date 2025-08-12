@@ -2,7 +2,13 @@ from django.contrib import admin
 from .models import TimelineType, Timeline, KeyPhoto
 
 
-admin.site.register(KeyPhoto)
+@admin.register(KeyPhoto)
+class KeyPhotoAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'filename', 'weight_grams', 'photo_taken_at', 'uploaded_at', 'is_deleted')
+    list_filter = ('user', 'is_deleted', 'uploaded_at', 'photo_taken_at')
+    search_fields = ('filename', 'user__username', 'user__email')
+    readonly_fields = ('uploaded_at', 'created', 'updated')
+    list_per_page = 50
 
 @admin.register(TimelineType)
 class TimelineTypeAdmin(admin.ModelAdmin):
@@ -10,12 +16,8 @@ class TimelineTypeAdmin(admin.ModelAdmin):
 
 @admin.register(Timeline)
 class TimelineAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'updated', 'created', 'is_deleted')
-
-# @admin.register(KeyPhoto)
-# class KeyPhotoAdmin(admin.ModelAdmin):
-#     list_display = ('timeline', 'date_taken', 'weight')
-
-# @admin.register(Transition)
-# class TransitionAdmin(admin.ModelAdmin):
-#     list_display = ('timeline', 'created_at', 'is_ready')
+    list_display = ('id', 'user', 'name', 'updated', 'created', 'is_deleted')
+    list_filter = ('user', 'is_deleted', 'created', 'updated')
+    search_fields = ('name', 'user__username', 'user__email')
+    readonly_fields = ('created', 'updated')
+    list_per_page = 50
