@@ -14,8 +14,7 @@ SECRET_KEY = secrets['django']['secret_key']
 
 DEBUG = secrets['django']['debug']
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']
 
 AWS_ACCESS_KEY_ID = secrets['aws']['access_key_id']
 AWS_SECRET_ACCESS_KEY = secrets['aws']['secret_access_key']
@@ -76,8 +75,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'testguru',
-        'USER': 'mkjck',
-        'PASSWORD': secrets['django']['db_password'],
+        'USER': secrets['db']['db_user'],
+        'PASSWORD': secrets['db']['db_password'],
         'HOST': 'localhost',
         'PORT': '5432',
     }
