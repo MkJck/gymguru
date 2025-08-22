@@ -10,11 +10,11 @@ db-setup: ## Create database if it doesn't exist
 
 migrate: ## Run Django migrations
 	@echo "Running migrations..."
-	source venv/bin/activate && python3 manage.py migrate
+	. venv/bin/activate && python3 manage.py migrate
 
 run: ## Start Django development server
 	@echo "Starting Django server..."
-	source venv/bin/activate && python3 manage.py runserver
+	. venv/bin/activate && python3 manage.py runserver
 
 setup: db-setup migrate ## Complete setup: create DB and run migrations
 	@echo "Setup complete!"

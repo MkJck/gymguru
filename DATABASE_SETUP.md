@@ -9,7 +9,7 @@
 
 2. **Set PostgreSQL password for user 'postgres':**
    ```bash
-   sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'brawl-stars';"
+   sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'postgres';"
    ```
 
 3. **Create database (if needed):**
