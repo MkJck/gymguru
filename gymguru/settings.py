@@ -15,7 +15,7 @@ SECRET_KEY = secrets['django']['secret_key']
 DEBUG = secrets['django']['debug']
 
 ALLOWED_HOSTS = [
-    '*',
+    '51.250.32.66',
 ]
 
 # AWS S3 Configuration
