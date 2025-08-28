@@ -23,3 +23,8 @@ clean: ## Remove Python cache files
 	@echo "Cleaning Python cache..."
 	find . -type f -name "*.pyc" -delete
 	find . -type d -name "__pycache__" -delete
+
+test-s3: ## Test S3 connection
+	@echo "Testing S3 connection..."
+	. venv/bin/activate && python test_s3.py
+

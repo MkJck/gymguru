@@ -14,11 +14,26 @@ SECRET_KEY = secrets['django']['secret_key']
 
 DEBUG = secrets['django']['debug']
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '192.168.1.100',
+    '158.160.178.181',
+]
 
+# AWS S3 Configuration
 AWS_ACCESS_KEY_ID = secrets['aws']['access_key_id']
 AWS_SECRET_ACCESS_KEY = secrets['aws']['secret_access_key']
 AWS_REGION = secrets['aws']['region']
+AWS_STORAGE_BUCKET_NAME = 'testguru-v2'
+AWS_S3_ENDPOINT_URL = 'https://storage.yandexcloud.net'  # Yandex Cloud S3 endpoint
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.storage.yandexcloud.net'
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+AWS_DEFAULT_ACL = 'public-read'
+AWS_QUERYSTRING_AUTH = False
+AWS_S3_FILE_OVERWRITE = False
 
 
 # Application definition
@@ -30,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',                          # legacy
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'storages',                                         # S3 storage backend
     'timelines',
     'auf',
     'rest_framework',
@@ -116,11 +132,27 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+# S3 Storage Configuration
+USE_S3 = True
 
-# Media files (Uploaded files)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+if USE_S3:
+    # S3 Static files
+    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/static/'
+    
+    # S3 Media files
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+    
+    # Local fallback for development
+    STATIC_ROOT = BASE_DIR / 'staticfiles'
+    MEDIA_ROOT = BASE_DIR / 'media'
+else:
+    # Local storage
+    STATIC_URL = '/static/'
+    STATIC_ROOT = BASE_DIR / 'staticfiles'
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

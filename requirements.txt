@@ -25,6 +25,7 @@ python-dotenv==1.1.1
 pytz==2025.2
 PyYAML==6.0.2
 redis==6.2.0
+django-storages==1.14.2
 s3transfer==0.13.1
 setuptools==80.9.0
 six==1.17.0

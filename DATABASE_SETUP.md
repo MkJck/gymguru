@@ -40,3 +40,7 @@ sudo -u postgres psql -c "CREATE DATABASE testguru;"
 ## Note
 
 Django migrations create tables but don't create the database itself. The `setup_db.sh` script automatically creates the `testguru` database if it doesn't exist.
+
+## Related Documentation
+
+- [S3 Storage Setup](S3_SETUP.md) - Configuration for Yandex Cloud S3 storage
